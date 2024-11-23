@@ -5,60 +5,17 @@ Matricule: 590023
 
 """
 
-
 from sys import argv
 from getkey import getkey
 
-# corespond au .nombre de colones et lignes délimitant la carte du jeu
+# number of columns and lines (borders)
 NBR_SIDE_LINES = NBR_SIDE_COLUMNS = 2
 
-# corespond à la dernière ligne du fichier ne comprenant que le nombre de tours restants
-MVMT_NBR = IDX_CORRECTOR = 1  # représente l'entier 1 qui est une ligne de fichier ne contenant que max_moves
+# last line of file == max_moves help later to only get other info
+MVMT_NBR = IDX_CORRECTOR = 1
 
-# Ajout d'une variable espacement pour espacer la carte du coté gauche de la console
-espacement = "   "
-
-# et un index_corrector pour les boucles for et le systeme de coordonnées étant donné que la coord(0,0) corespond à "+"
 alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
             'V', 'W', 'X', 'Y', 'Z']
-
-fond_blanc = "\u001b[47m"
-# rouge 0       vert 1         jaune 2      bleu 3         magenta 4    cyan 5
-couleur = ["\u001b[41m", "\u001b[42m", "\u001b[43m", "\u001b[44m", "\u001b[45m", "\u001b[46m"]
-post_string_color = "\u001b[0m"
-
-# source titre :  https://patorjk.com/software/taag/#p=display&h=0&v=0&f=Fire%20Font-k&t=ULBLOQUE
-# source crédits : https://fancy-generator.com/fr
-# Le titre n'est pas adaptable à la taille de la console il faudrait utiliser la librairies OS io resize par rapport à
-# console
-titre = """
-                       ██▓▒­░ * 𝚖𝚊𝚍𝚎 𝚋𝚢 𝙼𝚊𝚡𝚜𝚘𝚞𝚕𝚜 * ░­▒▓██
- 
-
-      ___._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._.___
-    /./~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\.\ 
-    ||                 (             (         )                                ||
-    ||                 )\ )     (    )\ )   ( /(      (                         ||
-    ||            (   (()/(   ( )\  (()/(   )\())   ( )\       (    (           ||
-    ||            )\   /(_))  )((_)  /(_)) ((_)\    )((_)      )\   )\          ||
-    ||         _ ((_) (_))   ((_)_  (_))     ((_)  ((_)_    _ ((_) ((_)         ||
-    ||        | | | | | |     | _ ) | |     / _ \   / _ \  | | | | | __|        ||
-    ||        | |_| | | |__   | _ \ | |__  | (_) | | (_) | | |_| | | _|         ||
-    ||         \___/  |____|  |___/ |____|  \___/   \__\_\  \___/  |___|        ||
-    \.\________________________________________________________________________/./
-    
-            Règles :  Sortir la voiture blanche par la sortie "-->"
-                      Press "ESCAPE" to quit at any moment
-            
-            Comment ? 1 : Séléctionnez une voiture par sa lettre correspondante
-                      2 : Déplacer la voiture avec :  UP  DOWN  RIGHT  LEFT
-                      3 : Reseléctionnez une voiture
-                          
-                      
-                 << Press any button to play the game >>
-    
-"""
-
 
 """
 parse_game
@@ -82,7 +39,8 @@ def parse_game(game_file_path: str) -> dict:
         game_map = []
         for lines in game_data:
             game_map.append(lines.strip())
-        # si malgré la 1ere vérif des arguments le chemin d'accès n'est pas bon empeche le crash
+
+    # si malgré la 1ere vérif des arguments le chemin d'accès n'est pas bon empeche le crash
     # except FileNotFoundError: !!
     # print("File not found") !!
     # exit(0) !!
@@ -97,36 +55,27 @@ def parse_game(game_file_path: str) -> dict:
         found_cars = []
         for line in range(height + IDX_CORRECTOR):
             for char in range(width + IDX_CORRECTOR):
-                # D'abord la boucle lenght car elle corespond à la longueur de la liste et la width à la longueur d'un
-                # élément de celle-ci (qui est lui-même une liste
                 car_letter = game_map[line][char]
                 car_size = 0
                 if car_letter in alphabet:
                     if car_letter not in found_cars:
-                        car = [(char - IDX_CORRECTOR, line - IDX_CORRECTOR),
-                               "orientation",
-                               car_size,
-                               game_map[line][char]]
-                        # line = x et char = y
+                        car = [(char - IDX_CORRECTOR, line - IDX_CORRECTOR), "orientation",
+                               car_size, game_map[line][char]]
+
                         found_cars.append(car_letter)
                         idx_orientation = 1
                         idx_car_size = 2
 
-                        # Sachant que la première partie de voiture sera toujours le morceau le plus en haut à gauche il
-                        # suffit de vérifier pour le cas horizontal et vertical positif
-
                         if line + 1 < len(game_map) and game_map[line + 1][char] == car_letter:
                             car[idx_car_size] += 1
-                            orientation = 'v'
-                            car[idx_orientation] = orientation
+                            car[idx_orientation] = "v"
                             new_line = line + 1
                             while new_line < len(game_map) and game_map[new_line][char] == car_letter:
                                 car[idx_car_size] += 1
                                 new_line += 1
                         elif char + 1 < len(game_map[line]) and game_map[line][char + 1] == car_letter:
                             car[idx_car_size] += 1
-                            orientation = 'h'
-                            car[idx_orientation] = orientation
+                            car[idx_orientation] = "h"
                             new_char = char + 1
                             while new_char < len(game_map[line]) and game_map[line][new_char] == car_letter:
                                 car[idx_car_size] += 1
@@ -134,10 +83,8 @@ def parse_game(game_file_path: str) -> dict:
 
                         cars.append(car)
 
-        # https://docs.python.org/3/howto/sorting.html
-        # documentation python avec la recherche "python techniques de sort"
-        # on fait une assignation qui recuillera la liste triée.
-        # param de sorted(): list : list et key = lambda x : caractère ou entier à trier
+        # Assignement of the values into a sorted list
+        # param de sorted(): list : list and key = lambda x : idx of the carachter or integer to sort - Aide GPT
 
         cars = sorted(cars, key=lambda x: x[3])
         for idx in range(len(cars)):
@@ -163,38 +110,39 @@ get_game_st
 
 
 def get_game_str(game: dict, current_move_number: int) -> str:
-    # initialise une carte vide ( la sortie sera placée lors du placement de a
+    fond_blanc = "\u001b[47m"
+    # red 0, green , yellow 2, blue 3, magenta 4, cyan 5
+    couleur = ["\u001b[41m", "\u001b[42m", "\u001b[43m", "\u001b[44m", "\u001b[45m", "\u001b[46m"]
+    post_string_color = "\u001b[0m"
+    # Initialize the inner map of the game (inclue only de cars and void characthers
     inner_map = [["+"] + ["-"] * game["width"] + ["+"] + ["\n"]]
+
+    # Initialize borders of the map
     for i in range(game["height"]):
         inner_map.append(["|"] + ['.'] * game["width"] + ["|"] + ["\n"])
     inner_map.append(["+"] + ["-"] * game["width"] + ["+\n"])
     cars = game["cars"]
 
-    # placement de la voiture blanche et de la sortie en face
+    # the exit is at the end of the list in front of the white car
     coord_car = cars[0][0][0] + IDX_CORRECTOR, cars[0][0][1] + IDX_CORRECTOR
     code_blanc = fond_blanc + alphabet[0] + post_string_color
-    inner_map[coord_car[1]][coord_car[0]] = code_blanc  # LES INDICE LE PREMIER == Y le 2EME == X
+    inner_map[coord_car[1]][coord_car[0]] = code_blanc  # x and y are switched in a matrix
     inner_map = place_car(inner_map, coord_car, code_blanc, cars[0][2], cars[0][1])
     inner_map[coord_car[1]][-2] = "-->"
     count = 0
     for car in range(1, len(cars)):
         coord_car_n = cars[car][0][0] + IDX_CORRECTOR, cars[car][0][1] + IDX_CORRECTOR
-        # opération pour permettre de redistribuer les couleurs si cars > 8
         code_color = couleur[count % len(couleur)] + alphabet[car] + post_string_color
         car_size = cars[car][2]
         car_orientation = cars[car][1]
         inner_map = place_car(inner_map, coord_car_n, code_color, car_size, car_orientation)
         count += 1
-    # Création de la partie avec les mouvements restants
+
     outer_matrix = place_remaining_moves(str(current_move_number), str(game["max_moves"]))
-    # transformation en string de la carte
 
     string_of_map = ''
-
-    string_of_map = convert_to_str(inner_map, string_of_map, nbr_deplacment=6)
-
-    string_of_map = convert_to_str(outer_matrix, string_of_map, nbr_deplacment=3)
-    # La carte débutera au desus du premier caractère de MAX_MOVES
+    string_of_map = convert_to_str(inner_map, string_of_map)
+    string_of_map = convert_to_str(outer_matrix, string_of_map)
     return string_of_map
 
 
@@ -202,24 +150,24 @@ def move_car(game: dict, car_index: int, direction: str) -> bool:
     cars = game["cars"]
     car = cars[car_index]
 
-    # on calcule toutes les coordonnées de la voiture déplacée
-    moved_car = []
+    # We calculate all the coordinates of the car
+    coord_moved_car = []
     for i in range(car[2]):
         if car[1] == "h":
-            moved_car.append((car[0][0] + i, car[0][1]))
+            coord_moved_car.append((car[0][0] + i, car[0][1]))
         else:
-            moved_car.append((car[0][0], car[0][1] + i))
+            coord_moved_car.append((car[0][0], car[0][1] + i))
 
     cars_coord = recolt_coord(cars, car_index)
 
     # On va comparer la nouvelle position à toute celles de autres voitures
-    return compare_cars(game, moved_car, car[1], car[2], direction, cars_coord, car_index)
+    return compare_cars(game, coord_moved_car, direction, cars_coord, car_index)
 
 
 def is_win(game: dict) -> bool:
-    # tjrs horizon. taille map       taille voiture A
+
     exit_location = game["width"] - game["cars"][0][2]
-    # je compare juste les x le y ne changeant jamais
+    # y will never change for the white car
     if game["cars"][0][0][0] is exit_location:
         return True
     else:
@@ -228,32 +176,27 @@ def is_win(game: dict) -> bool:
 
 def play_game(game: dict) -> int:
     remaining_moves = game["max_moves"]
-    if getkey() == "ESCAPE":
-        return 2
 
-    else:
-        while not is_win(game):
-            print(get_game_str(game, remaining_moves))
-            print("Choisissez la voiture à déplacer")
-            choose = getkey().upper()
+    while not is_win(game):
+        print(get_game_str(game, remaining_moves))
+        print("Choisissez la voiture à déplacer")
+        choose = getkey().upper()
+        if remaining_moves == 0:
+            return 1
 
-            if remaining_moves == 0:
-                return 1
+        else:
+            if choose == 'ESCAPE':
+                return 2
 
-            else:
-                # Lire la touche pressée
-                if choose == 'ESCAPE':
-                    return 2
-
-                elif choose.upper() in alphabet and alphabet.index(choose) < len(game["cars"]):
-                    print(f"Vous avez séléctionné la voiture :  {choose}")
-                    move = getkey()
-                    if move_car(game, alphabet.index(choose), move):
-                        print("le mouvement est effectué")
-                        remaining_moves -= 1
-                    else:
-                        print("Le déplacement n'est pas valide")
-        return 0
+            elif choose.upper() in alphabet and alphabet.index(choose) < len(game["cars"]):
+                print(f"Vous avez séléctionné la voiture :  {choose}")
+                move = getkey()
+                if move_car(game, alphabet.index(choose), move):
+                    print("le mouvement est effectué")
+                    remaining_moves -= 1
+                else:
+                    print("Le déplacement n'est pas valide")
+    return 0
 
 
 """
@@ -269,9 +212,8 @@ return : string ainsi formé
 """
 
 
-def convert_to_str(matrix: list, string: str, nbr_deplacment: int) -> str:
+def convert_to_str(matrix: list, string: str) -> str:
     for line in matrix:
-        string += espacement * nbr_deplacment
         for character in line:
             string += character
     return string
@@ -311,6 +253,8 @@ def place_car(game_map: list, first_coord: tuple, color: str, car_size: int, ori
 
 """
 # Update1: J'ai décidé de créer une fonction à part pour placer les if statements à la chaine 6 if consécutifs. Amélio ?
+# Update2: Si je créé un dict qui contient les mouvements et coord, et si utilisation le jeu fonctionne 
+mais je ne passe pas les tests 
 compare_cars
 Compare la liste des coordonnées de la voiture séléctionnée avec les autres coordonnées des voitures sur la carte.
 paramètres : - game: dictionnaire représentant l'avancement du jeu
@@ -326,55 +270,33 @@ BUT: Séparer les différentes parties de la fonction move_car pour plus de lisi
 """
 
 
-def compare_cars(game: dict, moved_car_coord: list, car_orientation: str,
-                 car_size: int, direction: str, other_cars: list, car_index: int) -> bool:
-    new_coord = []
-    if car_orientation == "h":
-        if direction == "RIGHT":
-            for coord in range(len(moved_car_coord)):
-                new_coord.append((moved_car_coord[coord][0] + 1, moved_car_coord[coord][1]))
-            for element in new_coord:
-                if not (0 <= new_coord[0][0] < game["width"] - car_size + 1 and element not in other_cars):
-                    return False
+def compare_cars(game: dict, moved_car_coord: list, direction: str, other_cars: list, car_index: int) -> bool:
+    car_authorised_move = {
+        "h": {"RIGHT": (1, 0), "LEFT": (-1, 0)},
+        "v": {"UP": (0, -1), "DOWN": (0, 1)},
+    }
 
-            game["cars"][car_index][0] = new_coord[0]
-            return True
+    car_orientation = game["cars"][car_index][1]
 
-        elif direction == "LEFT":
-            for coord in range(len(moved_car_coord)):
-                new_coord.append((moved_car_coord[coord][0] - 1, moved_car_coord[coord][1]))
-            for element in new_coord:
-                if not (0 <= new_coord[0][0] < game["width"] - car_size + 1 and element not in other_cars):
-                    return False
+    if direction not in car_authorised_move[car_orientation]:
+        return False
 
-            game["cars"][car_index][0] = new_coord[0]
-            return True
+    move_x, move_y = car_authorised_move[car_orientation][direction]
+    updated_coord = []
 
-        else:
+    for old_x, old_y in moved_car_coord:
+        new_x, new_y = old_x + move_x, old_y + move_y
+
+        if not (0 <= new_x < game["width"] and 0 <= new_y < game["height"]):
             return False
-    else:
-        if direction == "UP":
-            for coord in range(len(moved_car_coord)):
-                new_coord.append((moved_car_coord[coord][0], moved_car_coord[coord][1] - 1))
 
-            for element in new_coord:
-                if not (0 <= new_coord[0][1] < game["height"] - car_size + 1 and element not in other_cars):
-                    return False
-
-            game["cars"][car_index][0] = new_coord[0]
-            return True
-
-        elif direction == "DOWN":
-            for coord in range(len(moved_car_coord)):
-                new_coord.append((moved_car_coord[coord][0], moved_car_coord[coord][1] + 1))
-            for element in new_coord:
-                if not (0 <= new_coord[0][1] < game["height"] - car_size + 1 and element not in other_cars):
-                    return False
-
-            game["cars"][car_index][0] = new_coord[0]
-            return True
-        else:
+        if (new_x, new_y) in other_cars:
             return False
+
+        updated_coord.append((new_x, new_y))
+
+    game["cars"][car_index][0] = updated_coord[0]
+    return True
 
 
 """
@@ -394,13 +316,11 @@ BUT: Plus de clareté
 
 def place_remaining_moves(remaining_moves: str, max_moves: str):
 
-    # usage de chatGPT pour trouver les codes ascii, l'affichage est indépendant de la taille de la grille
     co_matrix = [["<|"] + ["======="] + ["MAX MOVES"] + ["======|>\n"],
                  [" |"] + ["__________"] + [max_moves] + ["__________|\n"],
                  [" |~~~~~~remaining~~~~~~~|\n"],
                  [" \________\ "] + ["\033[32m" + str(remaining_moves) + "\033[0m"] + [" /________/\n"]]
 
-    # changement de la couleur du numéro en fonction du nombres de mouvements restants
     if 5 < int(remaining_moves) <= int(max_moves) // 2:
         co_matrix[-1] = [" \________\ "] + ["\033[33m" + str(remaining_moves) + "\033[0m"] + [" /________/\n"]
     elif 1 <= int(remaining_moves) <= 5:
@@ -430,18 +350,45 @@ def recolt_coord(cars: list, car_index: int) -> list:
 
     # Récupérez les coordonnées de toutes les autres voitures
     for i, car in enumerate(cars):
-        if i != car_index:  # Ignorez la voiture en cours de mouvement
+        if i != car_index:  # Ignore the moving car
             car_coords = []
-            for j in range(car[2]):  # car[2] est la taille de la voiture
-                if car[1] == "h":  # orientation horizontale
-                    car_coords.append((car[0][0] + j, car[0][1]))  # (x, y)µ
-                else:  # orientation verticale
-                    car_coords.append((car[0][0], car[0][1] + j))  # (x, y)
-            occupied_coords.extend(car_coords)  # Ajoutez les coordonnées occupées
+            for j in range(car[2]):  # car[2]  == size of the car
+                if car[1] == "h":
+                    car_coords.append((car[0][0] + j, car[0][1]))
+                else:
+                    car_coords.append((car[0][0], car[0][1] + j))
+            occupied_coords.extend(car_coords)
     return occupied_coords
 
 
 if __name__ == '__main__':
+    titre = """
+                           ██▓▒­░ * 𝚖𝚊𝚍𝚎 𝚋𝚢 𝙼𝚊𝚡𝚜𝚘𝚞𝚕𝚜 * ░­▒▓██
+
+
+          ___._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._.___
+        /./~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\.\ 
+        ||                 (             (         )                                ||
+        ||                 )\ )     (    )\ )   ( /(      (                         ||
+        ||            (   (()/(   ( )\  (()/(   )\())   ( )\       (    (           ||
+        ||            )\   /(_))  )((_)  /(_)) ((_)\    )((_)      )\   )\          ||
+        ||         _ ((_) (_))   ((_)_  (_))     ((_)  ((_)_    _ ((_) ((_)         ||
+        ||        | | | | | |     | _ ) | |     / _ \   / _ \  | | | | | __|        ||
+        ||        | |_| | | |__   | _ \ | |__  | (_) | | (_) | | |_| | | _|         ||
+        ||         \___/  |____|  |___/ |____|  \___/   \__\_\  \___/  |___|        ||
+        \.\________________________________________________________________________/./
+
+                Règles :  Sortir la voiture blanche par la sortie "-->"
+                          Press "ESCAPE" to quit at any moment
+
+                Comment ? 1 : Séléctionnez une voiture par sa lettre correspondante
+                          2 : Déplacer la voiture avec :  UP  DOWN  RIGHT  LEFT
+                          3 : Reseléctionnez une voiture
+
+
+                     << Press any button to play the game >>
+
+    """
     commande = argv
     if len(commande) > 2 or len(commande) == 1:
         print(f"La commande n'est pas correcte. Le nombre d'argument(s) est:  ({len(commande)}).\n")
@@ -449,15 +396,13 @@ if __name__ == '__main__':
         exit(0)
     else:
         file_of_map = commande[1]
-        # initialise la carte
         play_map = parse_game(file_of_map)
         print(titre)
-        # lance le jeu
-        res = play_game(play_map)
-        if res == 0:
-            print("\033[42m\033[37mVous avez gagné !\033[0m")
-        elif res == 1:
-            print("\033[31mVous avez perdu !\033[0m")
-        else:
-            print("Vous avez quitté le jeu")
-
+        if getkey():
+            res = play_game(play_map)
+            if res == 0:
+                print("\033[42m\033[37mVous avez gagné !\033[0m")
+            elif res == 1:
+                print("\033[31mVous avez perdu !\033[0m")
+            else:
+                print("Vous avez quitté le jeu")
